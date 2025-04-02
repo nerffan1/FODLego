@@ -485,6 +485,10 @@ class FODStructure:
                 a = DFFOD(at1,heightdir)
                 b = DFFOD(at1,-heightdir)
                 _AddFFOD(a,b)
+                if self.mAtom.mOwner.mOpen == True:
+                    a = DFFOD(at1,heightdir, False)
+                    b = DFFOD(at1,-heightdir, False)
+                    _AddFFOD(a,b)
 
             elif free == 3:
                 from FODLego.FFOD import TFFOD
@@ -494,6 +498,13 @@ class FODStructure:
                 f2 = TFFOD(at1, norms[1])
                 f3 = TFFOD(at1, norms[2])
                 _AddFFOD(f1,f2,f3)
+
+                #Add alternative FOD channel if open shelled
+                if self.mAtom.mOwner.mOpen == True:
+                    f1 = TFFOD(at1, norms[0], False)
+                    f2 = TFFOD(at1, norms[1], False)
+                    f3 = TFFOD(at1, norms[2], False)
+                    _AddFFOD(f1,f2,f3)
 
         def TripleBond(at2: Atom, curr_bond: Bond):
             """
@@ -525,6 +536,7 @@ class FODStructure:
                         TripleBond(bonded_at, bond)
 
         def AddFFODs():
+            #Lazy import for LSP
             from FODLego.FFOD import SFFOD, DFFOD, TFFOD
             if self.mAtom.mFreePairs == 2:
                 if self.mAtom.mSteric >= 3:
@@ -532,6 +544,8 @@ class FODStructure:
             elif self.mAtom.mFreePairs == 1:
                 if self.mAtom.mSteric >= 2:
                     _AddFFOD(SFFOD(self.mAtom))
+                    if self.mAtom.mOwner.mOpen == True:
+                        _AddFFOD(SFFOD(self.mAtom, False))
             elif self.mAtom.mFreePairs == 3:
                 AddFreeElectron(3)
 

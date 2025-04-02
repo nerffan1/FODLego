@@ -4,8 +4,8 @@ from FODLego.ElementaryClasses import *
 from copy import copy
 
 class FFOD(FOD):
-    def __init__(self, atom: Atom, HeightDir = np.zeros(3), target=None):
-        super().__init__(copy(atom.mPos))
+    def __init__(self, atom: Atom, HeightDir = np.zeros(3), ch=True, target=None):
+        super().__init__(copy(atom.mPos), ch)
         self.mAtom = atom
         self.mAngle = 0.0
         self.mR = 0.0
@@ -27,8 +27,8 @@ class FFOD(FOD):
         # self.mHeight = 0.0
 
 class SFFOD(FFOD):
-    def __init__(self, atom: Atom):
-            super().__init__(atom)
+    def __init__(self, atom: Atom, pol=True):
+            super().__init__(atom, ch=pol)
             self.DetermineParameters()
 
     def DetermineParameters(self) -> None:
@@ -70,8 +70,8 @@ class SFFOD(FFOD):
         self.mFreeDir = normalize(atom2ffod)
 
 class DFFOD(FFOD):
-    def __init__(self, atom: Atom, heightdir: np.ndarray):
-        super().__init__(atom, heightdir)
+    def __init__(self, atom: Atom, heightdir: np.ndarray, ch=True):
+        super().__init__(atom, heightdir, ch)
         self.DetermineParameters()
 
     def DetermineParameters(self):
@@ -119,8 +119,8 @@ class DFFOD(FFOD):
         self.mFreeDir = normalize(atom2ffod)
 
 class TFFOD(FFOD):
-    def __init__(self, atom: Atom, heightdir: np.ndarray):
-        super().__init__(atom, heightdir)
+    def __init__(self, atom: Atom, heightdir: np.ndarray, ch=True):
+        super().__init__(atom, heightdir,ch)
         self.DetermineParameters()
 
     def DetermineParameters(self):
