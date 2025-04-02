@@ -105,15 +105,17 @@ class GlobalData:
 
     # The following ladder is based of various monoatomic calculations.
     #Think of a scheme that places the beginning of a 
-    mGeo_Ladder = { 2: ['point'], 
-                        4: ['point','point'],
-                        10: ['point','tetra'], 
-                        18: ['point', 'tetra', 'tetra'],
-                        20: ['point', 'tetra', 'triaug_val', 'point'], 
-                        30: ['point', 'tetra', 'triaug', 'point'],
-                        36: ['point', 'tetra', 'triaug', 'tetra'],
-                        54: ['point', 'tetra', 'triaug', 'triaug', 'tetra'] }
-    mShellShapes = {1: ['point'], 4: ['tetra'], 9: ['triaugmented']}
+    mGeo_Ladder = { 2: ['pt'], #1s
+                        4: ['pt','pt'],
+                        7: ['pt','tetra', 'tetra'],
+                        8: ['pt','tetra','pt'],
+                        10: ['pt','tetra'], #1s2s2p 
+                        18: ['pt','tetra', 'tetra'], #1s2s2p3s3p
+                        20: ['pt', 'tetra', 'triaug', 'pt'], 
+                        30: ['pt', 'tetra', 'triaug', 'pt'],
+                        36: ['pt', 'tetra', 'triaug', 'tetra'], #1s2s2p3s3p3d4s4p
+                        54: ['pt', 'tetra', 'triaug', 'triaug', 'tetra'] }
+    mShellShapes = {1: ['point'], 4: ['a_tetra'], 9: ['triaugmented']}
     #This ladder is based of the 
     mElecConfLadder= [2,2,6,2,6,2,10,6,2,10,6,2,10,6]
     #Geometries for known shell structures

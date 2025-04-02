@@ -12,7 +12,7 @@ from scipy.spatial import distance
 # Others
 from os import remove
 import logging
-logging.basicConfig(format="%(levelname)s:%(filename)s:%(funcName)s(): %(message)s")
+logger = logging.getLogger(__name__)
 
 # Custom Made library
 from FODLego.globaldata import GlobalData
@@ -23,7 +23,7 @@ from FODLego.BFOD import *
 
 
 class Molecule:
-    def __init__(self, source, RelaxedFODs = None, OgXYZ = None) -> None:
+    def __init__(self, source, RelaxedFODs = None, OgXYZ = None, openshell = False) -> None:
         # Molecular Parameters
         self.mAtoms: List[Atom] = []
         self.mComment = ''
@@ -34,6 +34,7 @@ class Molecule:
         self.mCFODs = set()
         self.mFODs = []
         self.mValidStruct = True
+        self.mOpen = openshell
 
         # Associated files
         self.mSrc: str = source
@@ -102,15 +103,25 @@ class Molecule:
             #First 2 lines
             output.write(str(len(self.mAtoms) + len(self.mFODs)) + '\n')
             output.write(self.mComment)
+             
             # Write all atoms
             for atom in self.mAtoms:
                 atom_coords = ' '.join([f"{x:7.4f}" for x in atom.mPos])
                 output.write(f"{atom.mName} {atom_coords}\n")
-            
-            # Write all FODs
+             
+            # Initialize separate strings for each channel
+            up_fods = []
+            down_fods = []
+
             for fod in self.mFODs:
                 fod_coords = ' '.join([f"{x:7.4f}" for x in fod.mPos])
-                output.write(f"X {fod_coords}\n")
+                if fod.mChannel is True:
+                    up_fods.append(f"X {fod_coords}\n")
+                else:
+                    down_fods.append(f"He {fod_coords}\n")
+
+            # Combine all lines with True channels first, then False channels
+            output.write(''.join(up_fods + down_fods))
     
     def CreateCLUSTER(self) -> None:
         """
@@ -202,13 +213,12 @@ class Molecule:
 
     # Getters
     def GeFBEdges(self):
-        import logging
         for at in self.mAtoms:
             edges = at.GetAssocEdges_B_F_FOD()
             if len(edges) > 0:
-                logging.info(edges)
+                logger.info(edges)
             else:
-                logging.info("No edges found")
+                logger.info("No edges found")
 
     def get_ffod(self, type):
         return [f for f in self.mFFODs if isinstance(f,type)]
@@ -389,6 +399,10 @@ class Molecule:
             self.mBonds.append(newbond)
             Atom1.AddBond(Atom2, order)
             Atom2.AddBond(Atom1, order)
+        
+        # Find out valence of atoms after connectivity
+        for at in self.mAtoms:
+            at.mValCount = at.FindValence()
 
     def _CheckChemValency(self) -> None:
         """
@@ -397,7 +411,7 @@ class Molecule:
         """
         for atom in self.rdmol.GetAtoms():
             if atom.GetTotalValence() > 4 and self.mValidStruct == True:
-                logging.warning(f"Non simple bonding at {atom.GetSymbol()} in {self.mSrc}. Valency above 4.")
+                logger.warning(f"Non simple bonding at {atom.GetSymbol()} in {self.mSrc}. Valency above 4.")
                 self.mValidStruct = False
 
     def _CheckRadicals(self):
@@ -413,7 +427,6 @@ class Molecule:
         for atom in self.mAtoms:
             atom.CalcSteric()
         
-
     def CountFODs(self):
         """
         Returns the amout of FODs in the molecule
@@ -472,7 +485,8 @@ class Molecule:
             self.rdmol = Chem.MolFromXYZFile(file)
             read_xyz()
             rdDetermineBonds.DetermineConnectivity(self.rdmol)
-            rdDetermineBonds.DetermineBondOrders(self.rdmol, charge=self.mQ)
+            if len(self.rdmol.GetBonds()) > 0:
+                rdDetermineBonds.DetermineBondOrders(self.rdmol, charge=self.mQ)
 
         if self.mOgXYZ == None:
             if self.mSrc[-3:] == "pdb":  # WiP. This is a test
@@ -482,13 +496,14 @@ class Molecule:
             elif self.mSrc[-3:] == "xyz":
                 create_xyz(self.mSrc)
 
-            elif self.mSrc == "CLUSTER":
-                # Turn CLUSTER into an .xyz file
+            elif self.mSrc[-7:] == "CLUSTER":
+                # Turn CLUSTER into an .xyz file  
                 CLUST2XYZ(self.mSrc, "CLUST.xyz")
                 create_xyz("CLUST.xyz")
                 remove("CLUST.xyz")
 
             else:  # SMILES
+                print('THis is SMILES')
                 m = Chem.MolFromSmiles(self.mSrc)
                 self.rdmol = Chem.AddHs(m)
                 self.mComment = self.mSrc + '\n'

@@ -5,7 +5,8 @@
 #  -  Add Tetrahedra class and several attributes/methods to manipulate them
 #  - In far future, somehow implement the triaugmented triangular prism that corresponds to sp3d5 ( 9 FODs, 18 electrons) 
 #Author: Angel-Emilio Villegas S.
-from  .globaldata import GlobalData
+import logging
+logger = logging.getLogger(__name__)
 import numpy as np
 from numpy import sqrt
 from numpy.linalg import norm
@@ -18,21 +19,12 @@ from rdkit.Chem import GetPeriodicTable as PT
 from FODLego.Bond import *
 from FODLego.FOD import *
 import FODLego.Shells as Shells
+from  .globaldata import GlobalData
 
 ################# FOD STRUCTURE #################
 
 class Atom:
     def __init__(self, index: int, Name: str, Pos, owner):
-        #Known Attributes
-        self.mName = Name
-        self.mPos = np.array(Pos) 
-        self.mI = index
-        self.mZ = PT().GetAtomicNumber(Name)
-        self.mPeriod = GlobalData.GetPeriod(self.mZ)
-        self.mGroup = GlobalData.GetRow(self.mZ)
-        self.mValCount = self._FindValence()
-        self.mOwner = owner
-
         #Undetermined Attributes
         self.mSteric = 0
         self.mFreePairs = 0
@@ -41,6 +33,15 @@ class Atom:
         self.mGlobalBonds = []
         self.mFODStruct = FODStructure(self)
         self.mCompleteVal = False
+        #Known Attributes
+        self.mName = Name
+        self.mPos = np.array(Pos)
+        self.mI = index
+        self.mZ = PT().GetAtomicNumber(Name)
+        self.mPeriod = GlobalData.GetPeriod(self.mZ)
+        self.mGroup = GlobalData.GetRow(self.mZ)
+        self.mValCount = 0
+        self.mOwner = owner
         
 
     def GetMonoCovalRad(self): 
@@ -144,20 +145,24 @@ class Atom:
         self.mFreePairs = int(GlobalData.mShellCount[self.mPeriod] - bondelec)/2
         self.mSteric = self.mFreePairs + len(self.mBonds)
     
-    def _FindValence(self):
+    def FindValence(self):
         """
         This method finds the number of electrons in the valence shell by finding the 
         difference between the current Group and the last ClosedShell Group. Only works up
         to 5th period.
-        TODO: This can be saved in GlobalData
         """
-        if self.mGroup < 4:
-            return self.mGroup
+        # TODO: Assume in the meantime that bonded atoms have are closed shell
+        if len(self.mBonds) > 0:
+            if self.mGroup < 4:
+                return self.mGroup
+            else:
+                if self.mPeriod < 4:
+                    return (2 + (self.mGroup - 12))
+                elif self.mPeriod < 6:
+                    return (self.mGroup)
         else:
-            if self.mPeriod < 4:
-                return (2 + (self.mGroup - 12))
-            elif self.mPeriod < 6:
-                return (self.mGroup)
+            return 0
+
                     
     def _CheckFullShell(self):
         """
@@ -264,6 +269,17 @@ class FODStructure:
                     self.mfods = np.vstack((self.mfods,fod))
 
     def _AddCoreShell(self, shell):
+        """
+        This function adds the Shell object to the FODStructure object
+        and it also adds the FODs of that Shell object to the mCore of 
+        the FODStructure.
+
+       Args:
+            shell: The Shell object that will be added to the FOD 
+            Structure.
+            ch: Boolean representing the alpha/beta (up/down) channels 
+            of the electrons. True for Alpha, False for Beta.
+        """
         self.mCoreShells.append(shell)
         # Add individual FODs to the electronic structure
         for fod in shell.mfods:
@@ -272,18 +288,23 @@ class FODStructure:
 
     def PrepareShells(self, atoms: List[Atom]):
         """
-        This function will determine the creation of Core FODs, those that are not 
-        related to bonding. 
-        Comment: The scheme is easy in the first 3 periods of the Periodic
-        Table, but it will become trickier ahead if Hybridization heuristics don't work.
-        Currently it only works for closed shell calculations (V 0.1).
-        TODO: This will assume that we are doing up to the n=3 shell, with sp3 hybridization
-        TODO: Take into account free pairs of electrons
-        TODO: For mOrder=2, there are many schemes to determine direction
-        TODO: Find an elegant solution to do exceptions for H bonds
-        TODO: Account previous bonds formed, by talling previous FODs, or looking back at mBonds 
-        TODO: GlobalData.GetFullElecCount() Can be precalculated ahead of time and placed as a member vatrable
+        This function will determine the creation of Core FODs, those 
+        that are not related to bonding. The scheme is easy in the first
+        3 periods of the Periodic Table, but it will become trickier 
+        ahead if Hybridization heuristics don't work. Currently it only 
+        works for closed shell calculations (V 0.1).
         """
+        # TODO: This will assume that we are doing up to the n=3 shell,
+        #  with sp3 hybridization
+        # TODO: Take into account free pairs of electrons
+        # TODO: For mOrder=2, there are many schemes to determine
+        #  direction
+        # TODO: Find an elegant solution to do exceptions for H bonds
+        # TODO: Account previous bonds formed, by talling previous FODs,
+        #  or looking back at mBonds 
+        # TODO: GlobalData.GetFullElecCount() Can be precalculated ahead
+        #  of time and placed as a member vatrable
+
         #Lazy loading in order to 
         from FODLego.BFOD import SBFOD, DBFOD, TBFOD
        
@@ -297,6 +318,9 @@ class FODStructure:
            boldMeek = BoldMeek(at1,at2)
            newFOD = SBFOD(*boldMeek)
            _AddBFOD(curr_bond, at1, at2, newFOD)
+           if self.mAtom.mOwner.mOpen == True:
+                newFOD = SBFOD(*boldMeek, False)
+                _AddBFOD(curr_bond, at1, at2, newFOD)
 
         def DoubleBond(at2: Atom, curr_bond: Bond):
             """
@@ -385,6 +409,10 @@ class FODStructure:
                     f1 = DBFOD(dom,sub,axis2fod)
                     f2 = DBFOD(dom,sub,-axis2fod)
                     _AddBFOD(curr_bond, dom, sub, f1, f2) # Does dom/sub matter, or are at1/at2 fine?
+                    if self.mAtom.mOwner.mOpen == True:
+                        f1 = DBFOD(dom,sub,axis2fod,False)
+                        f2 = DBFOD(dom,sub,-axis2fod, False)
+                        _AddBFOD(curr_bond, dom, sub, f1, f2) # Does dom/sub matter, or are at1/at2 fine?
 
         def _AddBFOD(curr_bond: Bond, at1: Atom, at2: Atom, *fods):
             """
@@ -464,6 +492,10 @@ class FODStructure:
                 a = DFFOD(at1,heightdir)
                 b = DFFOD(at1,-heightdir)
                 _AddFFOD(a,b)
+                if self.mAtom.mOwner.mOpen == True:
+                    a = DFFOD(at1,heightdir, False)
+                    b = DFFOD(at1,-heightdir, False)
+                    _AddFFOD(a,b)
 
             elif free == 3:
                 from FODLego.FFOD import TFFOD
@@ -473,6 +505,13 @@ class FODStructure:
                 f2 = TFFOD(at1, norms[1])
                 f3 = TFFOD(at1, norms[2])
                 _AddFFOD(f1,f2,f3)
+
+                #Add alternative FOD channel if open shelled
+                if self.mAtom.mOwner.mOpen == True:
+                    f1 = TFFOD(at1, norms[0], False)
+                    f2 = TFFOD(at1, norms[1], False)
+                    f3 = TFFOD(at1, norms[2], False)
+                    _AddFFOD(f1,f2,f3)
 
         def TripleBond(at2: Atom, curr_bond: Bond):
             """
@@ -488,6 +527,13 @@ class FODStructure:
             f2 = TBFOD(*boldmeek, norms[1])
             f3 = TBFOD(*boldmeek, norms[2])
             _AddBFOD(curr_bond, at1, at2, f1, f2, f3)
+            if self.mAtom.mOwner.mOpen == True:
+                f1 = TBFOD(*boldmeek, norms[0], False)
+                f2 = TBFOD(*boldmeek, norms[1], False)
+                f3 = TBFOD(*boldmeek, norms[2], False)
+                _AddBFOD(curr_bond, at1, at2, f1, f2, f3)
+
+ 
 
         def AddBFODs():
             """
@@ -504,6 +550,7 @@ class FODStructure:
                         TripleBond(bonded_at, bond)
 
         def AddFFODs():
+            #Lazy import for LSP
             from FODLego.FFOD import SFFOD, DFFOD, TFFOD
             if self.mAtom.mFreePairs == 2:
                 if self.mAtom.mSteric >= 3:
@@ -511,20 +558,28 @@ class FODStructure:
             elif self.mAtom.mFreePairs == 1:
                 if self.mAtom.mSteric >= 2:
                     _AddFFOD(SFFOD(self.mAtom))
+                    if self.mAtom.mOwner.mOpen == True:
+                        _AddFFOD(SFFOD(self.mAtom, False))
             elif self.mAtom.mFreePairs == 3:
                 AddFreeElectron(3)
 
         def AddCoreElectrons():
             #Count core electrons and
             core_elec = self.mAtom.mZ - self.mAtom.mValCount
+            logger.debug(f"\n Atom: {self.mAtom.mName}\n Core electrons: {core_elec}")
             if core_elec != 0:
                 for shell in GlobalData.mGeo_Ladder[core_elec]:
-                    if shell == 'point':
+                    if shell == 'pt':
                         self._AddCoreShell(Shells.Point(self.mAtom))
+                        if self.mAtom.mOwner.mOpen == True:
+                            self._AddCoreShell(Shells.Point(self.mAtom, False))
                     elif shell == 'tetra':
                         self._AddCoreShell(Shells.Tetra(self.mAtom, 10))
-                    elif shell == 'triaug':
+                        if self.mAtom.mOwner.mOpen == True:
+                            self._AddCoreShell(Shells.Tetra(self.mAtom, 10, False))
+                    elif shell == 'a_triaug':
                         pass # For future development: Beyond scope
+
 
         # Prepare the valence shell first, since it will help determine the
         # orientation of the inner shells

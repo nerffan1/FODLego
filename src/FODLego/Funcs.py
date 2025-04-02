@@ -36,10 +36,15 @@ def RotatePoints(n:int,fod0:np.ndarray,axis:np.ndarray) -> List[np.ndarray]:
     return fodsRotated
 
 def RotateNormals(n: int, firstdir: np.ndarray, axis: np.ndarray) -> List[np.ndarray]:
+    # Assertions
     assert len(axis) == 3, "The array must have 3 dimensions"
     assert len(firstdir) == 3, "The array must have 3 dimensions"
+
+    # Variables
     fodsRotated = [firstdir]
     step = (2*np.pi)/n
+
+    # Rotate input vector and create a new coordinate from that
     for i in range(1,n):
         rot = R.from_rotvec((step*i)*axis)
         fod = np.matmul(rot.as_matrix(),firstdir)
