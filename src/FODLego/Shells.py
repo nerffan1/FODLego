@@ -23,7 +23,7 @@ class FODShell:
 
 class Point(FODShell):
     def __init__(self, atom, ch=True):
-        super().__init__(atom,'point', [CFOD(atom, atom.mPos)], ch)
+        super().__init__(atom,'point', [CFOD(atom, atom.mPos, ch)], ch)
 
 class Tetra(FODShell):
     """

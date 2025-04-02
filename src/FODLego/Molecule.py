@@ -103,18 +103,25 @@ class Molecule:
             #First 2 lines
             output.write(str(len(self.mAtoms) + len(self.mFODs)) + '\n')
             output.write(self.mComment)
+             
             # Write all atoms
             for atom in self.mAtoms:
                 atom_coords = ' '.join([f"{x:7.4f}" for x in atom.mPos])
                 output.write(f"{atom.mName} {atom_coords}\n")
-            
-            # Write all FODs
+             
+            # Initialize separate strings for each channel
+            up_fods = []
+            down_fods = []
+
             for fod in self.mFODs:
                 fod_coords = ' '.join([f"{x:7.4f}" for x in fod.mPos])
                 if fod.mChannel is True:
-                    output.write(f"X {fod_coords}\n")
+                    up_fods.append(f"X {fod_coords}\n")
                 else:
-                    output.write(f"Xx {fod_coords}\n")
+                    down_fods.append(f"He {fod_coords}\n")
+
+            # Combine all lines with True channels first, then False channels
+            output.write(''.join(up_fods + down_fods))
     
     def CreateCLUSTER(self) -> None:
         """
