@@ -23,7 +23,7 @@ from FODLego.BFOD import *
 
 
 class Molecule:
-    def __init__(self, source, RelaxedFODs = None, OgXYZ = None) -> None:
+    def __init__(self, source, RelaxedFODs = None, OgXYZ = None, openshell = False) -> None:
         # Molecular Parameters
         self.mAtoms: List[Atom] = []
         self.mComment = ''
@@ -34,6 +34,7 @@ class Molecule:
         self.mCFODs = set()
         self.mFODs = []
         self.mValidStruct = True
+        self.mOpen = openshell
 
         # Associated files
         self.mSrc: str = source
@@ -110,7 +111,10 @@ class Molecule:
             # Write all FODs
             for fod in self.mFODs:
                 fod_coords = ' '.join([f"{x:7.4f}" for x in fod.mPos])
-                output.write(f"X {fod_coords}\n")
+                if fod.mChannel is True:
+                    output.write(f"X {fod_coords}\n")
+                else:
+                    output.write(f"Xx {fod_coords}\n")
     
     def CreateCLUSTER(self) -> None:
         """
@@ -492,6 +496,7 @@ class Molecule:
                 remove("CLUST.xyz")
 
             else:  # SMILES
+                print('THis is SMILES')
                 m = Chem.MolFromSmiles(self.mSrc)
                 self.rdmol = Chem.AddHs(m)
                 self.mComment = self.mSrc + '\n'

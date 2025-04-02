@@ -105,16 +105,16 @@ class GlobalData:
 
     # The following ladder is based of various monoatomic calculations.
     #Think of a scheme that places the beginning of a 
-    mGeo_Ladder = { 2: ['a_point'],
-                        4: ['a_point','a_point'],
-                        7: ['a_point','a_tetra', 'b_tetra'],
-                        8: ['a_point','a_tetra', 'b_tetra'],
-                        10: ['a_point','a_tetra'], 
-                        18: ['a_point', 'a_tetra', 'a_tetra'],
-                        20: ['a_point', 'a_tetra', 'triaug_val', 'a_point'], 
-                        30: ['a_point', 'a_tetra', 'triaug', 'a_point'],
-                        36: ['a_point', 'a_tetra', 'triaug', 'a_tetra'],
-                        54: ['a_point', 'a_tetra', 'triaug', 'triaug', 'a_tetra'] }
+    mGeo_Ladder = { 2: ['pt'], #1s
+                        4: ['pt','pt'],
+                        7: ['pt','tetra', 'tetra'],
+                        8: ['pt','tetra','pt'],
+                        10: ['pt','tetra'], #1s2s2p 
+                        18: ['pt','tetra', 'tetra'], #1s2s2p3s3p
+                        20: ['pt', 'tetra', 'triaug', 'pt'], 
+                        30: ['pt', 'tetra', 'triaug', 'pt'],
+                        36: ['pt', 'tetra', 'triaug', 'tetra'], #1s2s2p3s3p3d4s4p
+                        54: ['pt', 'tetra', 'triaug', 'triaug', 'tetra'] }
     mShellShapes = {1: ['point'], 4: ['a_tetra'], 9: ['triaugmented']}
     #This ladder is based of the 
     mElecConfLadder= [2,2,6,2,6,2,10,6,2,10,6,2,10,6]

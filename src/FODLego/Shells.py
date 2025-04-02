@@ -34,13 +34,15 @@ class Tetra(FODShell):
     def __init__(self, atom, core_amount: int, ch = True) -> None:
         # Scale the FODs according to radius
         s = GlobalData.mRadii[core_amount][atom.mZ]
+        if ch is False:
+            s *= -1
 
         # The geometry of a tetrahedron in a unit circle
         # TODO Create a file with geometries, rather than declaring here
-        fods = [ CFOD(atom, atom.mPos + s*array([0.0,0.0,1.0])),
-            CFOD(atom, atom.mPos + s*array([sqrt(8/9), 0.0, -1/3])),
-            CFOD(atom, atom.mPos + s*array([-sqrt(2/9),sqrt(2/3), -1/3])),
-            CFOD(atom, atom.mPos + s*array([-sqrt(2/9),-sqrt(2/3), -1/3])) ]
+        fods = [ CFOD(atom, atom.mPos + s*array([0.0,0.0,1.0]), ch),
+            CFOD(atom, atom.mPos + s*array([sqrt(8/9), 0.0, -1/3]), ch),
+            CFOD(atom, atom.mPos + s*array([-sqrt(2/9),sqrt(2/3), -1/3]), ch),
+            CFOD(atom, atom.mPos + s*array([-sqrt(2/9),-sqrt(2/3), -1/3]),ch)]
         # Call parent initializer
         super().__init__(atom, 'tetra', fods, ch)
 

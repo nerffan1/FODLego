@@ -41,7 +41,7 @@ class CFOD(FOD):
     create this class instead of creating a Boolean member inside the FOD class that made it a
     CFOD.
     """
-    def __init__(self, atom, pos: np.ndarray = np.zeros(3)) -> None:
-        super().__init__(pos)
+    def __init__(self, atom, pos: np.ndarray = np.zeros(3), ch=True) -> None:
+        super().__init__(pos,ch)
         self.mAtom = atom
         self.mR = np.linalg.norm(self.mPos - atom.mPos)

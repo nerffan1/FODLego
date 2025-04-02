@@ -541,16 +541,17 @@ class FODStructure:
             logger.debug(f"\n Atom: {self.mAtom.mName}\n Core electrons: {core_elec}")
             if core_elec != 0:
                 for shell in GlobalData.mGeo_Ladder[core_elec]:
-                    if shell == 'a_point':
+                    if shell == 'pt':
                         self._AddCoreShell(Shells.Point(self.mAtom))
-                    elif shell == 'b_point':
-                        self._AddCoreShell(Shells.Point(self.mAtom, False))
-                    elif shell == 'a_tetra':
+                        if self.mAtom.mOwner.mOpen == True:
+                            self._AddCoreShell(Shells.Point(self.mAtom, False))
+                    elif shell == 'tetra':
                         self._AddCoreShell(Shells.Tetra(self.mAtom, 10))
-                    elif shell == 'b_tetra':
-                        self._AddCoreShell(Shells.Tetra(self.mAtom, 10, False))
-                    elif shell == 'triaug':
+                        if self.mAtom.mOwner.mOpen == True:
+                            self._AddCoreShell(Shells.Tetra(self.mAtom, 10, False))
+                    elif shell == 'a_triaug':
                         pass # For future development: Beyond scope
+
 
         # Prepare the valence shell first, since it will help determine the
         # orientation of the inner shells
