@@ -171,8 +171,8 @@ class DBFOD(BFOD):
         self.mBoldR = np.linalg.norm(self.mBold.mPos - self.mPos)
 
 class TBFOD(BFOD):
-    def __init__(self, bold: Atom, meek: Atom, heightdir: np.ndarray):
-        super().__init__(bold,meek)
+    def __init__(self, bold: Atom, meek: Atom, heightdir: np.ndarray, ch=True):
+        super().__init__(bold,meek,pol=ch)
         self.mHeight = heightdir 
         self.mBoldAngle = np.deg2rad(54.735) 
         self.DetermineParameters()

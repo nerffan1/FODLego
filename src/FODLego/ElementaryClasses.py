@@ -527,6 +527,13 @@ class FODStructure:
             f2 = TBFOD(*boldmeek, norms[1])
             f3 = TBFOD(*boldmeek, norms[2])
             _AddBFOD(curr_bond, at1, at2, f1, f2, f3)
+            if self.mAtom.mOwner.mOpen == True:
+                f1 = TBFOD(*boldmeek, norms[0], False)
+                f2 = TBFOD(*boldmeek, norms[1], False)
+                f3 = TBFOD(*boldmeek, norms[2], False)
+                _AddBFOD(curr_bond, at1, at2, f1, f2, f3)
+
+ 
 
         def AddBFODs():
             """
