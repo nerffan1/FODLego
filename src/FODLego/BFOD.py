@@ -8,8 +8,8 @@ class BFOD(FOD):
     along the bonding axis in order to characterize the FODs. Some of these attributes of this class will tend toward zero in the SBFOD, but we know from some examples
     that they are not always zero (e.g. they might lie slightly off the bonding axis, so there might be an angle).
     """
-    def __init__(self, boldAt: Atom, meekAt: Atom, target=None):
-        super().__init__()
+    def __init__(self, boldAt: Atom, meekAt: Atom, target=None, pol=True):
+        super().__init__(ch=pol)
         # Atoms
         self.mBold = boldAt
         self.mMeek = meekAt
@@ -100,8 +100,8 @@ class SBFOD(BFOD):
     """
     This is the Single Bonding FOD (SBFOD) class
     """
-    def __init__(self, bold: Atom, meek: Atom):
-        super().__init__(bold,meek)
+    def __init__(self, bold: Atom, meek: Atom, ch=True):
+        super().__init__(bold,meek, pol=ch)
         self.mBoldPortion = self.Calc_AxisBoldPortion(bold.mZ, meek.mZ)
         self.DetermineParamenters()
 
@@ -115,8 +115,8 @@ class SBFOD(BFOD):
         self.mMeekR = self.mBondDist*(1-self.mBoldPortion)
 
 class DBFOD(BFOD):
-    def __init__(self, bold: Atom, meek: Atom, heightdir: np.ndarray):
-        super().__init__(bold,meek)
+    def __init__(self, bold: Atom, meek: Atom, heightdir: np.ndarray, ch=True):
+        super().__init__(bold,meek,pol=ch)
         self.mHeight = heightdir
         self.DetermineParameters()
 

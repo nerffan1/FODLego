@@ -318,6 +318,9 @@ class FODStructure:
            boldMeek = BoldMeek(at1,at2)
            newFOD = SBFOD(*boldMeek)
            _AddBFOD(curr_bond, at1, at2, newFOD)
+           if self.mAtom.mOwner.mOpen == True:
+                newFOD = SBFOD(*boldMeek, False)
+                _AddBFOD(curr_bond, at1, at2, newFOD)
 
         def DoubleBond(at2: Atom, curr_bond: Bond):
             """
@@ -406,6 +409,10 @@ class FODStructure:
                     f1 = DBFOD(dom,sub,axis2fod)
                     f2 = DBFOD(dom,sub,-axis2fod)
                     _AddBFOD(curr_bond, dom, sub, f1, f2) # Does dom/sub matter, or are at1/at2 fine?
+                    if self.mAtom.mOwner.mOpen == True:
+                        f1 = DBFOD(dom,sub,axis2fod,False)
+                        f2 = DBFOD(dom,sub,-axis2fod, False)
+                        _AddBFOD(curr_bond, dom, sub, f1, f2) # Does dom/sub matter, or are at1/at2 fine?
 
         def _AddBFOD(curr_bond: Bond, at1: Atom, at2: Atom, *fods):
             """
